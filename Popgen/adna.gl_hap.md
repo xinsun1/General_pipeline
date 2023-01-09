@@ -1,4 +1,4 @@
-# Pipeline for aDNA genotyope likelihood calling and pseudohaploid calling
+# Pipeline for aDNA - genotyope likelihood calling and pseudohaploid calling
 
 Things matters for aDNA:
 - deamination, C to T/U mutation
