@@ -3,6 +3,7 @@
 Things matters for aDNA:
 - deamination, C to T/U mutation
 - low sequencing depth
+- others (to add)
 
 Before doing this, remember to perform data QC first.
 
