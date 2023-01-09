@@ -9,7 +9,7 @@ Things matters for aDNA ***Poor data quality***:
 Before doing this, remember to perform data QC first.
 
 ## 1. Genotype likelihood
-
+test
 
 
 
