@@ -55,9 +55,13 @@ wait
 ```
 
 Merge results for illustration
+`estError.R` can be downloaded [here](https://github.com/ANGSD/angsd/tree/master/R)
 ``` bash
+for i in {1..29}; do echo "err_chr.${i}:.ancErrorChr"; done > list.filename
+awk 'FNR!=1 {for(i=1;i<=NF;i++){a[FNR-1][i]+=$i};tf=NF;tl=FNR-1;next}END{for(i=1;i<=tl;i++){for(j=1;j<=tf;j++){printf a[i][j]"\t";};print ""}}' $(< list.filename) > err_all.ancError.all
 
-
+# estError.R from ANGSD install directory
+Rscript ../../program/angsd-master/R/estError.R file=err_all.ancError.all
 ```
 
 Illustration with R/python
@@ -65,6 +69,100 @@ Check the ANGSD manual
 
 Example code for R
 ``` R
+#### error rate ####
+# 'plot angsd err estimation result'
+
+## 0. set env
+setwd('~/Documents/Projects/Bos/1.qc/')
+
+library(tidyverse)
+
+raw = read.table(file='./errorEst.txt', stringsAsFactors = F, header = F, fill = T )
+
+ind = read.table('list.round1')
+
+meta_sample=read_csv(file="../0.meta/Bos_dataset - meta_information.csv",
+                     skip_empty_rows = TRUE)
+meta_sample=meta_sample[! is.na(meta_sample$ID),] # remove empty rows
+rownames(meta_sample) = meta_sample$ID
+
+
+n=85
+
+
+mut = raw[2:(n+1), 2:ncol(raw)]
+mut = as.data.frame(sapply(mut, as.numeric))
+mut = cbind(mut, ind)
+colnames(mut) = c(raw[1,1: (ncol(raw) -1)], 'id')
+
+p = mut %>% pivot_longer(!id, names_to = "mut_type", values_to = "mut_rate") 
+# %>% subset(! mut_type  %in%  c("C -> T", "G -> A", "A -> G", "T -> C")) # transversion only
+
+overall = data.frame(a=raw[(n+2):nrow(raw),1], id=ind[,1]) %>% 
+    separate(a, c(NA, "mut_rate", NA), sep = " ", remove = T) %>%
+    mutate(mut_rate=as.numeric(mut_rate))
+
+p_theme = theme(panel.background = element_rect(fill = NA, colour = "black", linetype = 1),
+                panel.grid.major = element_line(color = NA),
+                panel.grid.minor = element_line(color = NA),
+                axis.title.y = element_blank(), axis.title.x = element_blank(),
+                axis.text.x = element_text(size=14,angle = 90, hjust=1, vjust = 0.2),
+                legend.position = "none"
+)
+
+
+p %>%
+    # add pop, dp group
+    mutate(pop = meta_sample[id,]$data_group_bam_folder,
+           dp = meta_sample[id,]$`DP_chr1-29`) %>%
+    
+    mutate(dp1=case_when(dp>=1 ~ ">= 1x",
+                         TRUE ~ "<1x")) %>%
+    
+    ggplot() + geom_col(aes(x=id, y=mut_rate, fill=dp1)) +
+    facet_grid(mut_type ~ pop , scales = "free_x", space = "free_x") +
+    scale_fill_manual(values=rep(c('#e41a1c','#377eb8'),100)) + 
+    theme(panel.background = element_rect(fill = NA, colour = "black", linetype = 1),
+          panel.grid.major = element_line(color = NA),
+          panel.grid.minor = element_line(color = NA),
+          axis.title.y = element_blank(), axis.title.x = element_blank(),
+          axis.text.x = element_text(size=10,angle = 90, hjust=1, vjust = 0.2),
+          legend.position = "bottom"
+    )
+ggsave('err_mut_fixed_16x9.png',width = 16, height = 9, device = "png", dpi = 500)
+
+
+p %>%
+    # add pop, dp group
+    mutate(pop = meta_sample[id,]$data_group_bam_folder,
+           dp = meta_sample[id,]$`DP_chr1-29`) %>%
+    
+    mutate(dp1=case_when(dp>=1 ~ ">= 1x",
+                         TRUE ~ "<1x")) %>%
+    
+    ggplot() +
+    geom_col(aes(x=id, y=mut_rate, fill=mut_type),position=position_dodge()) +
+    facet_grid(dp1 ~ pop , scales = "free_x", space = "free_x") +
+    theme(panel.background = element_rect(fill = NA, colour = "black", linetype = 1),
+          panel.grid.major = element_line(color = NA),
+          panel.grid.minor = element_line(color = NA),
+          axis.title.y = element_blank(), axis.title.x = element_blank(),
+          axis.text.x = element_text(size=10, angle = 90, hjust=1, vjust = 0.2),
+          legend.position = "right")
+ggsave('err_all_free_16x9.png',width = 16, height = 9, device = "png", dpi = 500)
+
+
+ggplot(overall) + geom_col(aes(x=id, y=mut_rate), fill="blue") + 
+    theme(panel.background = element_rect(fill = NA, colour = "black", linetype = 1),
+          panel.grid.major = element_line(color = "grey", linetype=2),
+          panel.grid.minor = element_line(color = NA),
+          axis.title.y = element_blank(), axis.title.x = element_blank(),
+          axis.text.x = element_text(size=13, angle = 90, hjust=1, vjust = 0.2),
+          legend.position = "right")
+
+ggsave('err_all_free_16x16.png',width = 16, height = 16, device = "png", dpi = 300)
+ggsave('err_overall_withS_16x9.png',width = 16, height = 9, device = "png", dpi = 300)
+
 ```
 
 
