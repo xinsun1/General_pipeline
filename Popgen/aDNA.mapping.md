@@ -1,7 +1,7 @@
 
 # Mapping pipeline for aDNA
 ## 1.1 Paleomix map
-Paleomix is used for mapping.
+[Paleomix](https://paleomix.readthedocs.io/en/stable/) is used for mapping.
 
 **NB**
 - change the adapter sequences for you library, normally Illumina/BGI
