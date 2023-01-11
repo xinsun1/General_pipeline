@@ -3,6 +3,14 @@
 ## 1.1 Paleomix map
 Paleomix is used for mapping.
 
+**NB**
+- change the adapter sequences for you library, normally Illumina/BGI
+- one of the differences compare to modern DNA, two PE reads are collapsed `--collapse: yes`
+- minimun length for mapping (filter can be capplied in downstream analysis) `--minlength: 25`
+- bwa aln is commonly used for mapping `Algorithm: backtrack`
+- mapdamage is used to check the mutation pattern `mapDamage: plot`
+- etc
+
 An example `yaml` file.
 ``` bash
 # -*- mode: Yaml; -*-
@@ -178,3 +186,33 @@ do
 
 done
 ```
+
+An exmample of mapping with job arrays
+`$SLURM_ARRAY_TASK_ID` is set for job arrays. One line per samples in `$META_M`
+``` bash
+#!/bin/bash
+
+WDIR=/projects/mjolnir1/people/gnr216/3-panthera_aims/2-mapping
+META_M=/projects/mjolnir1/people/gnr216/3-panthera_aims/meta.mapping
+
+IFS=$'\n'
+
+ID_INDEX=$SLURM_ARRAY_TASK_ID
+
+### 0. set env
+module purge
+module load paleomix/1.3.6
+cd $WDIR
+
+#### dry run
+
+
+ID=$(awk 'NR=="'$ID_INDEX'" {print $1}' $META_M )
+
+cd $WDIR
+LOG=log.$ID
+
+paleomix bam run --jar-root /projects/mjolnir1/apps/conda/paleomix-1.3.6/share/picard-2.27.2-0/ --log-level info --max-threads 20 --adapterremoval-max-threads 10 --bwa-max-threads 20 --log-file ${LOG} $ID.yaml
+
+```
+
