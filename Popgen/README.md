@@ -13,19 +13,25 @@ This pipeline include the following analysis
     1. Paleomix mapping
     1. Quality control  
 3. Genotyping
-  1. Genotype likelihood
-  2. Pseudohaplid calling
+    1. Genotype likelihood
+    2. Pseudohaplid calling
 4. Population structure analysis
-  1. PCA with projection
-  2. ADMIXTURE with genotype likelihood
+    1. PCA with projection
+    2. ADMIXTURE with genotype likelihood
 5. Phylogeny
-  1. Treemix
+    1. Treemix
 6. Gene flow test - admixtools
-7. 
-Before doing this, remember to perform data QC first.
+7. to add
 
-## 1. Genotype likelihood
-test
+## 1. Mapping
+Paleomix is used for mapping.
+
+An example `yaml` file.
+``` bash
+
+
+```
+
 
 
 
