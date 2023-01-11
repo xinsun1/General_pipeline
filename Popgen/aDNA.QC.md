@@ -165,5 +165,32 @@ ggsave('err_overall_withS_16x9.png',width = 16, height = 9, device = "png", dpi 
 
 ```
 
+# 3. relatedness with ngsRelate
+
+An example code
+``` bash
+#!/bin/bash
+
+# set WDIR
+WDIR=/home/projects/ku-cbd/data/norwegian_wolves/SNP_calling/d-Bos
+
+MAF_FILE=/home/projects/ku-cbd/data/norwegian_wolves/SNP_calling/d-Bos/2.gl/gl_tv_mafF_misF.mafs.gz
+B_FILE=/home/projects/ku-cbd/data/norwegian_wolves/SNP_calling/d-Bos/2.gl/gl_tv_mafF_misF.beagle.gz
+
+
+# load module
+module load tools
+module load htslib/1.8
+
+
+# prep freq
+cd $WDIR/1.qc.rel
+# if -ref cut f6
+zcat $MAF_FILE | cut -f6 |sed 1d > freq
+
+/home/projects/ku-cbd/data/norwegian_wolves/SNP_calling/program/ngsRelate/ngsRelate -f freq -G $B_FILE -O rel_maf05_misF -n 85 -p 40
+```
+
+
 
 
