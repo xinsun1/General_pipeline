@@ -45,13 +45,26 @@ module load samtools/1.14
 samtools faidx $ANC
 
 # err estimate
-##### run per chr
+#### run per chr
 cd $WDIR/1.qc.err
 for i in $(less $CHR_LIST)
 do
         angsd -doAncError 1 -anc $ANC -ref $REF -out err_chr.$i -bam $BAM_LIST -minMapQ 30 -minQ 20 -remove_bads 1 -uniqueOnly 1 -checkBamHeaders 0 -r $i &
 done
 wait
+```
+
+Merge results for illustration
+``` bash
+
+
+```
+
+Illustration with R/python
+Check the ANGSD manual
+
+Example code for R
+``` R
 ```
 
 
