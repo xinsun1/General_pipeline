@@ -147,6 +147,34 @@ Prefixes:
   L.Dalen_14_wolf.scf:
     Path: /home/projects/ku-cbd/data/ShyamShare/RefGenome/Wolf/L.Dalen_14_wolf.scf.noHets.fasta
 
-
 ```
 
+An example of dryrun for `paleomix` in `mjolnir`
+
+``` bash
+#!/bin/bash
+
+WDIR=/projects/mjolnir1/people/gnr216/3-panthera_aims/2-mapping
+META_M=/projects/mjolnir1/people/gnr216/3-panthera_aims/meta.mapping
+
+IFS=$'\n'
+
+
+### 0. set env
+module purge
+module load paleomix/1.3.6
+cd $WDIR
+
+#### dry run
+LOG_DRY=$WDIR/log.dry_run
+for i in $(less $META_M)
+do
+        ID=$(echo $i | awk '{print $1}')
+
+        cd $WDIR
+        echo "$ID" >> $LOG_DRY
+
+        paleomix bam run --dry-run --jar-root /projects/mjolnir1/apps/conda/paleomix-1.3.6/share/picard-2.27.2-0/ --log-level info --max-threads 20 --adapterremoval-max-threads 10 --bwa-max-threads 20 --log-file ${LOG_DRY} $ID.yaml
+
+done
+```
