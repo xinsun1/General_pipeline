@@ -23,18 +23,4 @@ This pipeline include the following analysis
 6. Gene flow test - admixtools
 7. to add
 
-## 1. Mapping
-Paleomix is used for mapping.
-
-An example `yaml` file.
-``` bash
-
-
-```
-
-
-
-
-
-## 2. pseudohaploid calling
 
