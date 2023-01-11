@@ -10,8 +10,8 @@ Things matters for aDNA ***Poor data quality***:
 
 This pipeline include the following analysis
 1. Mapping
-  1.1 Paleomix mapping
-  1.2 Quality control  
+    1. Paleomix mapping
+    1.2 Quality control  
 3. Genotyping
   1. Genotype likelihood
   2. Pseudohaplid calling
