@@ -1,12 +1,17 @@
 # Pipeline for aDNA - genotyope likelihood calling and pseudohaploid calling
 
+**Before doing this, remember to perform data QC first.**
+
 Things matters for aDNA ***Poor data quality***:
 - deamination, C to T/U mutation
 - low sequencing depth
 - short DNA fragment
 - others (to add)
 
-Before doing this, remember to perform data QC first.
+Reasons why GL or pseudohaploid
+- both will reduce the 
+
+
 
 ## 1. Genotype likelihood
 test
