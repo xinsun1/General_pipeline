@@ -7,6 +7,16 @@ QC for aDNA including the following process
 - be aware of the genotype missing rate/sequencing depth for each sample
 - etc
 
+Purpose of QC the dataset
+- accurate estimation of SFS (allele frequency spectrum)
+        - low coverage
+        - abnormal error rate
+        - related samples
+        - missingness (actually, in this regard, if sample size is big and missingness is random, it is OK to sample a good SFS)
+        - LD, which refers to the sampling bias of SNP distribution across the genome
+        - SNP density, related to how much information can be retrieved, e.g. ***??*** time scale, population scale
+        - etc. **(to add)**  
+
 ## 1. check mapdamage result
 The mapdamage plot is given by `paleomix`
 Check these two files `Fragmisincorporation_plot.pdf` and `Length_plot.pdf` to get an impression of you data quality.
