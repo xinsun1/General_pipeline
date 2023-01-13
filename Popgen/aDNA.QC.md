@@ -166,6 +166,9 @@ ggsave('err_overall_withS_16x9.png',width = 16, height = 9, device = "png", dpi 
 ```
 
 # 3. relatedness with ngsRelate
+Sometimes, it is useful/necessary to remove related individuals in the dataset.
+Imaging one of the population is just a family. 
+It is essentially about the **accurate estimation of allele frequency in the population sampled**.
 
 An example code
 ``` bash
