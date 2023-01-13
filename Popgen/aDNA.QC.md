@@ -9,8 +9,8 @@ QC for aDNA including the following process
 
 Purpose of QC the dataset
 - accurate estimation of SFS (allele frequency spectrum)
-        -. low coverage
-        - abnormal error rate
+        1. low coverage
+        1. abnormal error rate
         - related samples
         - missingness (actually, in this regard, if sample size is big and missingness is random, it is OK to sample a good SFS)
         - LD, which refers to the sampling bias of SNP distribution across the genome
