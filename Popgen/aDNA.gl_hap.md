@@ -24,8 +24,18 @@ Two types of pseudohaploid
 - random base
 - consensus base
 
+### 2.1 haploid calling
 An example code to call consensus base using ANGSD
 ``` bash
 
 ```
+
+### 2.2 data filtering
+Things consider to filter:
+- only keep SNPs in high quality(modern/high depth) samples
+- MAF
+- missingness
+
+
+
 
