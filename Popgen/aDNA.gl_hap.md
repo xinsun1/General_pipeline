@@ -20,3 +20,12 @@ test
 
 
 ## 2. pseudohaploid calling
+Two types of pseudohaploid 
+- random base
+- consensus base
+
+An example code to call consensus base using ANGSD
+``` bash
+
+```
+
