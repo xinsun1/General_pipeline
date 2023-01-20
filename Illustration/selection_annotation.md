@@ -4,7 +4,7 @@
 
 Some good tuturial I found available online:
 - [theta fst annotation and visualization](https://jyanglab.com/AGRO-932/chapters/a1.2-lab/w5lab.html#1)
-- (Great bioconductor tutorial)[https://uclouvain-cbio.github.io/BSS2019/03_CoreApproachesInBioconductor.html]
+- [Great bioconductor tutorial](https://uclouvain-cbio.github.io/BSS2019/03_CoreApproachesInBioconductor.html)
 
 
 ## 1. batch data processing
