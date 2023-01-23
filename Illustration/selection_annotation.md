@@ -7,6 +7,7 @@ Some good tuturial I found available online:
 - [Great bioconductor tutorial](https://uclouvain-cbio.github.io/BSS2019/03_CoreApproachesInBioconductor.html)
 - [Bioconductor annotation packages](https://bioconductor.org/packages/3.16/data/annotation/)
 - [Bioconductor annotation pipelines](https://www.bioconductor.org/help/course-materials/2015/UseBioconductorFeb2015/A01.5_Annotation.html)
+- [Tutorial for GO in R](https://yulab-smu.top/biomedical-knowledge-mining-book/index.html)
 
 
 ## 1. batch data processing
