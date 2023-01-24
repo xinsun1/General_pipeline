@@ -413,10 +413,11 @@ test_anno = run_pbs_anno_batch(
     meta_pbs_g_run,
     fst_dir = './fst/',
     pdir='./fst_plot/',
-    cf3_f1kb,
+    txdb_new_gene_f1kb,
     org_db,
     cutoff=0.9995,
-    flank = TRUE
+    flank = TRUE,
+    gff3 = TRUE
 )
 
 
