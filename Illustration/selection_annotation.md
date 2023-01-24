@@ -198,7 +198,6 @@ run_pbs_batch = function(meta_pbs_g_run, fst_dir, pdir){
         ggsave(p_name, width = p_width, height = p_height, device = "png", dpi = 500)
     }
 }
-
 run_pbs_anno_batch = function(meta_pbs_g_run, fst_dir, pdir, tx_db, org_db,
                               cutoff=0.9995, flank=FALSE, gff3=FALSE){
     # run pbs anno batch function:   run pbs with gene annotation for all combinations given in wdir
@@ -248,10 +247,10 @@ run_pbs_anno_batch = function(meta_pbs_g_run, fst_dir, pdir, tx_db, org_db,
                 tmp_anno_full = run_anno(tmp_pbs, tx_db, org_db, cutoff)
             }
             
-            
             tmp_anno_uniq = tmp_anno_full %>%
                 group_by(gene) %>%
                 filter(pbs == max(pbs)) %>%
+                distinct(gene, .keep_all = TRUE) %>%
                 mutate(batch=name_batch)
             tmp_anno_s = rbind(tmp_anno_s, tmp_anno_uniq)
             tmp_anno_full = tmp_anno_full %>%
@@ -402,7 +401,8 @@ txdb_new = import.gff3("/projects/mjolnir1/people/gnr216/r.ref/wolf/Canis_lupus_
 txdb_new_gene = txdb_new[txdb_new$type=="gene", ]
 txdb_new_gene_up = flank(txdb_new_gene, width=1000 ,start = TRUE, both = FALSE)
 txdb_new_gene_down = flank(txdb_new_gene, width=1000 ,start = FALSE, both = FALSE)
-txdb_new_gene_f1kb = trim(unlist(range(split(c(txdb_new_gene,txdb_new_gene_up, txdb_new_gene_down), ~gene_id))))
+# NB! this is a stupid way, just keep all three in one grange object. Shoulbe be merged. 
+txdb_new_gene_f1kb = unlist(as(list(txdb_new_gene,txdb_new_gene_up, txdb_new_gene_down), "GRangesList"))
 
 
 library("org.Cf.eg.db")
