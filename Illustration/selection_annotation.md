@@ -200,7 +200,7 @@ run_pbs_batch = function(meta_pbs_g_run, fst_dir, pdir){
 }
 
 run_pbs_anno_batch = function(meta_pbs_g_run, fst_dir, pdir, tx_db, org_db,
-                              cutoff=0.9995, flank=FALSE){
+                              cutoff=0.9995, flank=FALSE, gff3=FALSE){
     # run pbs anno batch function:   run pbs with gene annotation for all combinations given in wdir
     # be careful with conflicts bewtween tidyverse and others
     # input:
@@ -210,6 +210,7 @@ run_pbs_anno_batch = function(meta_pbs_g_run, fst_dir, pdir, tx_db, org_db,
     #   tx_db:              tx_db loaded
     #   org_db:             org_db loaded
     #   flank:              if flank db is used, default=FALSE
+    #   gff3:               if gff3 txdb is used, default=FALSE
     # output:             pbs plot
     # return:             df of outlier genes
     anno_gene_all = c()
@@ -236,7 +237,10 @@ run_pbs_anno_batch = function(meta_pbs_g_run, fst_dir, pdir, tx_db, org_db,
                 mutate(batch=name_batch)
             tmp_don_s = rbind(tmp_don_s, tmp_pbs)
             # get annotation
-            if(isFALSE(flank)){
+            if(gff3){
+                # gff3 used
+                tmp_anno_full = run_anno_gff3(tmp_pbs, tx_db, org_db, cutoff)
+            }else if(isFALSE(flank)){
                 # no flank
                 tmp_anno_full = run_anno_noflank(tmp_pbs, tx_db, org_db, cutoff)
             }else{
@@ -302,6 +306,7 @@ run_pbs_anno_batch = function(meta_pbs_g_run, fst_dir, pdir, tx_db, org_db,
 }
 
 
+
 run_anno = function(res_pbs, tx_db, org_db, cutoff=0.9995){
     # 1. get outlier regions
     threshold = quantile(res_pbs$pbs, probs = cutoff)
@@ -349,6 +354,37 @@ run_anno_noflank = function(res_pbs, tx_db, org_db, cutoff=0.9995){
     # filter(pbs == max(pbs))
     return(pbs_top_gene_df)
 }
+run_anno_gff3 = function(res_pbs, tx_db, org_db, cutoff=0.9995){
+    # run_anno:     get gene annotation for pbs result with flank regions for genes
+    # input:    
+    #   res_pbs:    pbs_result by run_pbs
+    #   tx_db:      loaded gff3 tx_db for region annotation
+    #   org_db:     loaded org_db for gene id annotation, not used
+    # return:       data.frame with annotation information
+    
+    # 1. get outlier regions
+    threshold = quantile(res_pbs$pbs, probs = cutoff)
+    pbs_top =  res_pbs %>% filter(pbs >= threshold)
+    # 2. grange overlap, input cf3, db
+    
+    pbs_top_gr = GRanges(str_sub(pbs_top$CHROM, start=4L),
+                         IRanges(start=pbs_top$BIN_START, end=pbs_top$BIN_END))
+    pbs_top_gr$pbs = pbs_top$pbs
+    pbs_top_gr$BPcum = pbs_top$BPcum
+    
+    pbs_top_gr_gene = findOverlaps(pbs_top_gr, tx_db)
+    pbs_top_gene_df = data.frame(
+        as(pbs_top_gr[pbs_top_gr_gene@from,], "data.frame"),
+        gene=tx_db[pbs_top_gr_gene@to,]$Name,
+        gene_id=tx_db[pbs_top_gr_gene@to,]$gene_id) %>%
+        mutate(gene=case_when(is.na(gene) ~ gene_id,
+                               TRUE ~ gene))
+    # group_by(gene) %>%
+    # filter(pbs == max(pbs))
+    return(pbs_top_gene_df)
+}
+
+
 
 # 4. load dbs
 .libPaths("/projects/mjolnir1/people/gnr216/a-software/R-lib/4.2")
