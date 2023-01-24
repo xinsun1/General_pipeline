@@ -389,14 +389,21 @@ run_anno_gff3 = function(res_pbs, tx_db, org_db, cutoff=0.9995){
 # 4. load dbs
 .libPaths("/projects/mjolnir1/people/gnr216/a-software/R-lib/4.2")
 library(GenomicRanges)
-library('TxDb.Cfamiliaris.UCSC.canFam3.refGene')
-cf3 = TxDb.Cfamiliaris.UCSC.canFam3.refGene
+#library('TxDb.Cfamiliaris.UCSC.canFam3.refGene')
+#cf3 = TxDb.Cfamiliaris.UCSC.canFam3.refGene
 
 # add flank 1kb for cf3
-cf3_up = flank(genes(cf3), width=1000 ,start = TRUE, both = FALSE)
-cf3_down = flank(genes(cf3), width=1000 ,start = FALSE, both = FALSE)
-cf3_f1kb = c(genes(cf3), cf3_up, cf3_down)
-cf3_f1kb=trim(unlist(range(split(cf3_f1kb, ~gene_id))))
+# cf3_up = flank(genes(cf3), width=1000 ,start = TRUE, both = FALSE)
+# cf3_down = flank(genes(cf3), width=1000 ,start = FALSE, both = FALSE)
+# cf3_f1kb = c(genes(cf3), cf3_up, cf3_down)
+# cf3_f1kb=trim(unlist(range(split(cf3_f1kb, ~gene_id))))
+
+txdb_new = import.gff3("/projects/mjolnir1/people/gnr216/r.ref/wolf/Canis_lupus_familiaris.CanFam3.1.104.gff3")
+txdb_new_gene = txdb_new[txdb_new$type=="gene", ]
+txdb_new_gene_up = flank(txdb_new_gene, width=1000 ,start = TRUE, both = FALSE)
+txdb_new_gene_down = flank(txdb_new_gene, width=1000 ,start = FALSE, both = FALSE)
+txdb_new_gene_f1kb = trim(unlist(range(split(c(txdb_new_gene,txdb_new_gene_up, txdb_new_gene_down), ~gene_id))))
+
 
 library("org.Cf.eg.db")
 org_db = org.Cf.eg.db
