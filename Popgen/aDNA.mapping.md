@@ -11,6 +11,10 @@
 - mapdamage is used to check the mutation pattern `mapDamage: plot`
 - etc
 
+`bwa aln` vs `bwa mem`
+The main difference is aln use global mapping while mem using k-mer for mapping. Thus k-mer allows for local mapping and allows for soft/hard clips. The use of k-mer makes it much faster than bwa aln.
+
+
 An example `yaml` file.
 ``` bash
 # -*- mode: Yaml; -*-
@@ -215,4 +219,7 @@ LOG=log.$ID
 paleomix bam run --jar-root /projects/mjolnir1/apps/conda/paleomix-1.3.6/share/picard-2.27.2-0/ --log-level info --max-threads 20 --adapterremoval-max-threads 10 --bwa-max-threads 20 --log-file ${LOG} $ID.yaml
 
 ```
-
+An example of submit mapping as job array
+``` bash
+sbatch --array=1-2%2 -t 3-0:0 -N 1 -c 20 -o ./log_slurm/log_%A_%a --mem-per-cpu=1G ./run_yaml.array.sh
+```
