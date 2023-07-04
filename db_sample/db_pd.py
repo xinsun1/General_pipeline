@@ -151,7 +151,7 @@ def read_csv(csv: list[str], sample_df: pd.DataFrame) -> None:
         tmp_df = pd.read_csv(file_csv)
         print(f'File read: {file_csv} with {tmp_df.shape[0]} rows')
 
-        print(f'Removed {} rows with missing Lab ID')
+        print(f'Removed {test} rows with missing Lab ID')
 
 
 
