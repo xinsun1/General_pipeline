@@ -15,6 +15,7 @@ from stat import S_ISREG, S_ISDIR
 from datetime import datetime
 import argparse
 
+
 def bam_df(no_rows: int) -> pd.DataFrame:
     """ create a bam df
     One BAM file per row
@@ -134,12 +135,12 @@ def clear_id(id_column: pd.Series) -> [pd.Series, pd.Series]:
     Returns:
         list(main_id, alternative_id_list)
     """
-    id_main_df = id_column.str.findall(r'MW\d+|AW\d+') # will have duplicates
-    id_main_df = id_main_df.apply(lambda x: x[0] if x else np.nan)# keep the first find
+    id_main_df = id_column.str.findall(r'MW\d+|AW\d+')  # will have duplicates
+    id_main_df = id_main_df.apply(lambda x: x[0] if x else np.nan)  # keep the first find
 
     id_alt_df = id_column.str.findall(
         r'(MW\d+)|(AW\d+)|\((\w+)\)|\[(\w*?)\]|(\w+) or|or (\w+)|(\w+) and|(\w+),')
-    id_alt_df = id_alt_df.apply(lambda x: [j for i in x for j in i if j!=''])
+    id_alt_df = id_alt_df.apply(lambda x: [j for i in x for j in i if j != ''])
 
     # remember to drop len(id)<4, when use, useless
     # exclude ext(ra) amp(lification) pur(ify)
@@ -173,7 +174,7 @@ def read_sample(csv: list[str]) -> pd.DataFrame:
 
         # plug main into the raw df
         tmp_df["id_main"] = id_clean_pd["id_main"]
-        tmp_df.dropna(subset=["id_main"], inplace=True) # drop na in main id
+        tmp_df.dropna(subset=["id_main"], inplace=True)  # drop na in main id
 
         # drop na and duplicates
         id_clean_pd.dropna(subset=["id_main"], inplace=True)
@@ -184,21 +185,21 @@ def read_sample(csv: list[str]) -> pd.DataFrame:
         # generate a tmp sample_df
         out_df = sample_df(n_unique_sample)
         # input main id and alt
-        out_df.loc[:, "id"] = id_clean_pd.loc[:, "id_main"].values   # no index
+        out_df.loc[:, "id"] = id_clean_pd.loc[:, "id_main"].values  # no index
         out_df.loc[:, "id_alt"] = id_clean_pd.loc[:, "id_alt"].values
 
-        #clean DP in raw
+        # clean DP in raw
         DP_columns = np.array(
             [
-            "# Estimated coverage from unique hits to CanFam31",
-            'Estimated coverage (Canfam31)'
+                "# Estimated coverage from unique hits to CanFam31",
+                'Estimated coverage (Canfam31)'
             ]
         )
         DP_str = DP_columns[np.isin(DP_columns, tmp_df.columns.values)][0]
-        tmp_df.rename(columns={DP_str: "DP"}, inplace=True) # rename to DP
+        tmp_df.rename(columns={DP_str: "DP"}, inplace=True)  # rename to DP
 
         tmp_df.loc[
-            ~tmp_df["DP"].astype(str).str.fullmatch(r'[0-9,.]*',na=False),
+            ~tmp_df["DP"].astype(str).str.fullmatch(r'[0-9,.]*', na=False),
             "DP"
         ] = np.nan
 
@@ -316,13 +317,13 @@ def get_all_fq(user: str, passwd: str) -> pd.DataFrame:
         # Close the SSH connection
         ssh.close()
 
-    fq_df = pd.DataFrame(np.array(list_of_file),
+    df_fq = pd.DataFrame(np.array(list_of_file),
                          columns=["file_name", "full_path"])
 
     # save to csv
-    fq_df.to_csv("fq_erda.csv")
+    df_fq.to_csv("fq_erda.csv")
 
-    return fq_df
+    return df_fq
 
 
 def get_all_bam(user: str, passwd: str, dir_list: list[str]) -> pd.DataFrame:
@@ -351,7 +352,7 @@ def get_all_bam(user: str, passwd: str, dir_list: list[str]) -> pd.DataFrame:
         # Walt through directory
         list_of_bam = []
         for dir_sub in dir_list:
-            walk_dir_fq(dir_sub, list_of_bam, sftp)
+            walk_dir_bam(dir_sub, list_of_bam, sftp)
 
         # Close the SFTP connection
         sftp.close()
@@ -369,6 +370,24 @@ def get_all_bam(user: str, passwd: str, dir_list: list[str]) -> pd.DataFrame:
     df_bam.to_csv("bam_server.csv")
 
     return df_bam
+
+
+def __check_ref(x: str) -> str:
+    """ check reference for bam"""
+    if re.findall(r'canfam', x, re.IGNORECASE):
+        return "CamFam3.1"
+    elif re.findall(r'L.D', x, re.IGNORECASE):
+        return  "L.Dalen_14"
+    else:
+        return np.nan
+
+def __find_bam(id_main: str, df_bam: pd.DataFrame) -> dict:
+    """ find bam for sample """
+    tmp_df = df_bam[df_bam["id_main"].isin([id_main])].sort_values(by="size")
+    tmp_df.drop_duplicates(subset="ref", keep="last", inplace=True)
+    return pd.Series(tmp_df.full_path.values, index=tmp_df.ref).to_dict()
+
+
 
 
 def arg():
@@ -438,25 +457,52 @@ def main():
 
     # read sample df
     if args.in_sample_csv is None:
-        # df_sample
-        ...
+        list_of_sample_files = []
+        with open(args.in_sample_file) as fh:
+            list_of_sample_files.append(fh.readline().strip())
+        df_sample = read_sample(list_of_sample_files)
     else:
         df_sample = pd.read_csv(args.in_sample_csv)
 
     # read bam df
     if args.in_bam_csv is None:
-        # read df_bam
-        ...
+        list_of_bam_dir = []
+        with open(args.in_bam_dir_file) as fh:
+            list_of_bam_dir.append(fh.readline().strip())
+        df_bam_raw = get_all_bam(
+            user=args.server_usr,
+            passwd=args.server_pw,
+            dir_list=list_of_bam_dir
+        )
     else:
         df_bam_raw = pd.read_csv(args.in_bam_csv)
 
     # read raw df
     if args.in_fq_csv is None:
-        ...
+        df_fq_raw = get_all_fq(
+            user=args.erda_usr,
+            passwd=args.erda_pw
+        )
     else:
         df_fq_raw = pd.read_csv(args.in_fq_csv)
 
     # match bams for sample
+    # clean df_bam
+    df_bam_raw["ref"] = df_bam_raw["file_name"].apply(__check_ref)
+    df_bam_raw["is_merge"] = df_bam_raw["file_name"].apply(
+        lambda x: True if re.findall(r'merge', x, re.IGNORECASE) else False
+    )
+    # exclude some folders, "from_pub", "temp"
+    df_bam_raw = df_bam_raw[df_bam_raw.full_path.apply(
+        lambda x: False if re.findall(r'(from_pub)|(temp)', x, re.IGNORECASE) else True
+    ).values]
+    # clean bam id
+    df_bam_raw["bam_id_clean"] = df_bam_raw["file_name"].str.replace(
+        r'(\.canfam.*)|(\.L\.D.*)|(\.realign.*)|(\.bam.*)|(merg[a-zA-Z]*_*)',
+        "",
+        flags=re.IGNORECASE)
+    df_bam_raw["id_main"] = clear_id(df_bam_raw["bam_id_clean"])["id_main"]
+
 
     # match raw for sample
 
@@ -465,11 +511,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-
