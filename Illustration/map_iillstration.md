@@ -23,3 +23,4 @@ https://stackoverflow.com/questions/73219945/geom-contour-with-lambert-projectio
 https://epsg.io/
 
 
+# 2. Generate smooth contour
