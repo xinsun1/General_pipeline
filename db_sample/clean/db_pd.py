@@ -102,7 +102,7 @@ def sample_df(no_rows: int) -> pd.DataFrame:
           id        str. Main sample id
           id_alt    list of alternative ids
           dp        sequencing coverage
-          batch     list of sequencing batches
+          batch     list of batches, dict{'names': str; 'idx': int; 'pool': bool}
           raw       list of raw data in erda
           bam       list of bam file in mjolnir
           projects  list of projects
@@ -139,7 +139,7 @@ def clear_id(id_column: pd.Series) -> [pd.Series, pd.Series]:
     id_main_df = id_main_df.apply(lambda x: x[0] if x else np.nan)  # keep the first find
 
     id_alt_df = id_column.str.findall(
-        r'(MW\d+)|(AW\d+)|\((\w+)\)|\[(\w*?)\]|(\w+) or|or (\w+)|(\w+) and|(\w+),')
+        r'(MW\w+)|(AW\w+)|\((\w+)\)|\[(\w*?)\]|^(\w+) | (\w+)$| (\w+) |(\w+),')
     id_alt_df = id_alt_df.apply(lambda x: [j for i in x for j in i if j != ''])
 
     # remember to drop len(id)<4, when use, useless
@@ -149,6 +149,80 @@ def clear_id(id_column: pd.Series) -> [pd.Series, pd.Series]:
 
     return pd.DataFrame({"id_main": id_main_df, "id_alt": id_alt_df})
 
+
+def clean_batch(df_raw: pd.DataFrame) -> pd.Series:
+    """ clean batch information from sample_df
+
+    Args:
+        df_raw: raw sample df
+    
+    Returns:
+        pd.Series with [batch1_dict, batch2_dict, ...]
+        dict{'name': str; 'idx': int; 'pool': bool}
+    """
+
+    batch_columns = np.array([
+        "Contract ID",
+        "Contract ID for sequencing"])
+    index_columns = np.array([
+        "Forward Index",
+        "Reverse Index"])
+    pool_columns = np.array([
+        "Pool name for screening (if necessary)",
+        "Pool name for Sequencing"])
+
+    # batch nan means missing, else [batches]
+    batch_pd = df_raw[batch_columns].copy()
+    batch_pd = batch_pd.stack(dropna=False).str.findall(r'F[A-Z0-9]*')
+    batch_pd = batch_pd.groupby(level=0).sum()
+
+    # index 0 means missing, else [index]
+    index_pd = df_raw[index_columns].copy()
+    index_pd = index_pd.stack(dropna=False).str.findall(r'\d+')
+    index_pd = index_pd.groupby(level=0).sum()
+
+    # pool [] means missing, else [pools]
+    pool_pd = df_raw.copy()
+    pool_pd["idx"] = pool_pd.index
+    pool_pd = pool_pd[np.append(pool_columns, "idx")]
+    pool_pd = pool_pd.melt(id_vars=["idx"]).drop_duplicates(subset=['idx','value'])
+    pool_pd = pool_pd.pivot(index="idx", columns="variable", values="value")
+    pool_pd = pool_pd.applymap(lambda x: [x] if pd.notnull(x) else []).sum(axis=1)
+
+    # return dict Series
+    df_batch = pd.DataFrame({"idx":batch_pd.copy().index})
+    df_batch["batch"] = df_batch["idx"].apply(
+    lambda x: {
+        "names" : batch_pd.loc[x],
+        "idx" : index_pd.loc[x],
+        "pool" : pool_pd.loc[x]}
+    )
+    df_batch= df_batch.drop(labels=['idx'], axis=1)
+
+    return df_batch["batch"]
+
+
+def __check_ref(x: str) -> str:
+    """ check reference for bam"""
+    if re.findall(r'canfam', x, re.IGNORECASE):
+        return "CamFam3.1"
+    elif re.findall(r'L.D', x, re.IGNORECASE):
+        return  "L.Dalen_14"
+    else:
+        return np.nan
+
+
+def __find_bam(id_main: str, df_bam: pd.DataFrame) -> dict:
+    """ find bam for sample """
+    tmp_df = df_bam[df_bam["id_main"].isin([id_main])].sort_values(by="size")
+    tmp_df.drop_duplicates(subset="ref", keep="last", inplace=True)
+    return pd.Series(tmp_df.full_path.values, index=tmp_df.ref).to_dict()
+
+
+def find_fq():
+    
+
+    pass
 
 def read_sample(csv: list[str]) -> pd.DataFrame:
     """ Read csv(list) into sample_df
@@ -192,7 +266,7 @@ def read_sample(csv: list[str]) -> pd.DataFrame:
         DP_columns = np.array(
             [
                 "# Estimated coverage from unique hits to CanFam31",
-                'Estimated coverage (Canfam31)'
+                "Estimated coverage (Canfam31)"
             ]
         )
         DP_str = DP_columns[np.isin(DP_columns, tmp_df.columns.values)][0]
@@ -217,7 +291,16 @@ def read_sample(csv: list[str]) -> pd.DataFrame:
         )
 
         # TODO: read batch
-        # TODO: add project information
+        # clean batch in raw
+        # one sample could have two line with two library
+        tmp_df["batch_dict"] = clean_batch(tmp_df)
+        out_df.loc[:, "batch"] = out_df["id"].apply(
+            lambda x: 
+                tmp_df.loc[
+                    tmp_df["id_main"].isin([x]),
+                    "batch_dict"
+                ].tolist()
+        )
 
         # add to return list
         list_df.append(out_df)
@@ -370,24 +453,6 @@ def get_all_bam(user: str, passwd: str, dir_list: list[str]) -> pd.DataFrame:
     df_bam.to_csv("bam_server.csv")
 
     return df_bam
-
-
-def __check_ref(x: str) -> str:
-    """ check reference for bam"""
-    if re.findall(r'canfam', x, re.IGNORECASE):
-        return "CamFam3.1"
-    elif re.findall(r'L.D', x, re.IGNORECASE):
-        return  "L.Dalen_14"
-    else:
-        return np.nan
-
-def __find_bam(id_main: str, df_bam: pd.DataFrame) -> dict:
-    """ find bam for sample """
-    tmp_df = df_bam[df_bam["id_main"].isin([id_main])].sort_values(by="size")
-    tmp_df.drop_duplicates(subset="ref", keep="last", inplace=True)
-    return pd.Series(tmp_df.full_path.values, index=tmp_df.ref).to_dict()
-
-
 
 
 def arg():
